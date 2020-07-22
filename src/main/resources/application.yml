@@ -1,0 +1,21 @@
+server:
+  port: 8080
+  
+spring:
+  datasource:
+     url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:oom_willem}
+     username: ${MYSQL_USERNAME:root}
+     password: ${MYSQL_PASSWORD:}
+  servlet:
+    multipart:
+      max-file-size:
+        500MB
+      max-request-size:
+        500MB
+        
+  jpa:
+     hibernate:
+       ddl-auto: update
+     properties:
+       hiberrnate:
+         dialect: org.hibernate.dialect.MYSQL8Dialect

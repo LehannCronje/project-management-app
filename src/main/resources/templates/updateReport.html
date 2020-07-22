@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <link rel="stylesheet" type="text/css" media="all" href="style.css" />
+  </head>
+  <body>
+    <div id="header">
+      <div class="img-left">
+        <img class="img-left" src="Tronox.png" alt="tronox.png" />
+      </div>
+      <div class="header-title">
+        [[${data.projectName}]]
+      </div>
+    </div>
+    <div id="footer">
+      <img src="NEP.jpg" alt="nep" />
+      <img src="PCC.jpg" alt="pcc" />
+    </div>
+
+    <h1 class="top-header">
+      <!-- <span class="left">Project: [[${data.projectName}]]</span> -->
+      <span class="right">Status Date: [[${data.statusDate}]]</span>
+    </h1>
+    <table style="width: 100%;">
+      <thead>
+        <tr class="table-head">
+          <th class="col-finish" align="center">ID</th>
+          <th class="col-finish" align="center">Name</th>
+          <th class="col-finish" align="center">Started</th>
+          <th class="col-finish" align="center">Start</th>
+          <th class="col-finish" align="center">Finish</th>
+          <th class="col-finish" align="center">Finished</th>
+          <th class="col-finish" align="center">Require More Work</th>
+          <th class="col-finish" align="center">Change Remaining Duration</th>
+          <th class="col-finish" align="center">New Remaining Duration</th>
+          <th class="col-finish" align="center">Notes</th>
+        </tr>
+      </thead>
+      <th:block th:each="task: ${data.updateReportList}">
+      <tr>
+        <td class="col-finish" align="center">[[${task.taskID}]]</td>
+        <td class="col-finish" align="center">[[${task.taskName}]]</td>
+        <td th:if="${task.started}" class="col-finish" align="center">Yes</td>
+        <td th:unless="${task.started}" class="col-finish" align="center">No</td>
+        <td class="col-finish" align="center">[[${task.start}]]</td>
+        <td class="col-finish" align="center">[[${task.finish}]]</td>
+        <td th:if="${task.finished}" class="col-finish" align="center">Yes</td>
+        <td th:unless="${task.finished}" class="col-finish" align="center">No</td>
+        <td th:if="${task.requireMoreWork}" class="col-finish" align="center">Yes</td>
+        <td th:unless="${task.requireMoreWork}" class="col-finish" align="center">No</td>
+        <td th:if="${task.started}" class="col-finish" align="center">Yes</td>
+        <td th:unless="${task.started}" class="col-finish" align="center">No</td>
+        <td class="col-finish" align="center">[[${task.remainingDuration}]]</td>
+        <td class="col-finish" align="center">[[${task.notes}]]</td>
+      </tr>
+    </table>
+  </body>
+</html>
