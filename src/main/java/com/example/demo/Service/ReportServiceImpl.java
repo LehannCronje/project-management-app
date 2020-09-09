@@ -14,11 +14,13 @@ import com.example.demo.Domain.UpdateTask;
 import com.example.demo.Domain.UpdateTaskReport;
 import com.example.demo.Entity.PResource;
 import com.example.demo.Entity.Project;
+import com.example.demo.Entity.RTask;
 import com.example.demo.Entity.Report;
 import com.example.demo.Entity.TxnUpdateReport;
 import com.example.demo.Repository.ProjectRepository;
 import com.example.demo.Repository.ReportRepository;
 import com.example.demo.Repository.ResourceRepository;
+import com.example.demo.Repository.TaskRepository;
 import com.example.demo.Repository.TxnUpdateReportRepository;
 import com.example.demo.dto.UpdateReportResDTO;
 import com.example.demo.util.PdfGenerartor;
@@ -50,17 +52,20 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     TxnUpdateReportRepository txnUpdateReportRepo;
 
+    @Autowired
+    TaskRepository taskRepo;
+
     @Override
-    public void taskListReport(List<Long> uidList) throws Exception {
+    public void taskListReport(List<Long> uidList, String calendarType, int value) throws Exception {
 
         for (Long uid : uidList) {
             PResource resource = resourceRepo.findById(uid).get();
             Report report = new Report();
 
-            String pattern = "dd MMMM yyyy";
+            String pattern = "yyyy-MM-dd";
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
             TaskListReportPOJO taskListReport = new TaskListReportPOJO();
-            taskListReport.setTasks(projectService.getAllTasks(uid));
+            taskListReport.setTasks(projectService.getAllTasks(uid, calendarType, value));
             taskListReport.setDate(simpleDateFormat.format(new Date()));
             taskListReport.setResourceName(resource.getName());
             taskListReport.setProjectName(resource.getProject().getName());
@@ -128,7 +133,8 @@ public class ReportServiceImpl implements ReportService {
         TxnUpdateReport txnUpdateReport = new TxnUpdateReport();
         PResource resource = resourceRepo.findById(updateTask.getResourceID()).get();
         Project project = resource.getProject();
-
+        RTask task = taskRepo.findByUidAndPResourceId(updateTask.getTaskID(), updateTask.getResourceID()).get();
+        task.setIsUpdated(true);
         for (TxnUpdateReport txnUpdateReportEntry : projectService.findTxnUpdateReportByProcessed(0, project.getId())) {
             if (txnUpdateReportEntry.getTaskID().equals(updateTask.getTaskID())) {
                 txnUpdateReport = txnUpdateReportEntry;
@@ -141,6 +147,7 @@ public class ReportServiceImpl implements ReportService {
         txnUpdateReport.setProject(project);
         txnUpdateReport.setProcessed(0);
         txnUpdateReportRepo.save(txnUpdateReport);
+        taskRepo.save(task);
     }
 
     public void downloadPdf(HttpServletResponse response, List<Long> uidList) {

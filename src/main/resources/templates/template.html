@@ -5,47 +5,50 @@
   </head>
   <body>
     <div id="header">
-      <div class="img-left">
-        <img class="img-left" src="Tronox.png" alt="tronox.png"/>
-      </div>
+<!--      <div class="img-left">-->
+<!--        <img class="img-left" src="Tronox.png" alt="tronox.png"/>-->
+<!--      </div>-->
       <div class="header-title">
         [[${data.projectName}]]
       </div>
+      <h1 class="top-header">
+        <span class="left">Name: [[${data.resourceName}]]</span>
+        <span class="right">Status Date: [[${data.date}]]</span>
+      </h1>
     </div>
     <div id="footer">
       <img src="NEP.jpg" alt="nep"/>
-      <img src="PCC.jpg" alt="pcc"/>
+<!--      <img src="PCC.jpg" alt="pcc"/>-->
     </div>
 
-    <h1 class="top-header">
-      <span class="left">Name: [[${data.resourceName}]]</span
-      ><span class="right">Status Date: [[${data.date}]]</span>
-    </h1>
+
     <table style="width: 100%">
       <thead>
         <tr class="table-head">
           <th class="col-id" align="center">ID</th>
           <th class="col-name" align="center">Name</th>
-          <th class="col-complete" align="center">Duration</th>
+          <th class="col-duration" align="center">Duration</th>
           <th class="col-start" align="center">Start</th>
           <th class="col-finish" align="center">Finish</th>
-          <th class="col-complete" align="center">% compl</th>
+          <th class="col-started" align="center">Started</th>
           <th class="col-notes" align="center">Notes</th>
         </tr>
       </thead>
 
       <th:block th:each="parentTask: ${data.tasks}">
         <tr>
-          <th colspan="7" class="bold">[[${parentTask.name}]]</th>
+          <th colspan="1" class="bold">[[${parentTask.id}]]</th>
+          <th colspan="6" class="bold">[[${parentTask.name}]]</th>
         </tr>
         <th:block th:each="task: ${parentTask.tasks}">
           <tr>
             <td class="col-id" align="center">[[${task.id}]]</td>
             <td class="col-name" align="center">[[${task.name}]]</td>
-            <td class="col-complete" align="center">[[${task.duration}]]</td>
+            <td class="col-duration" align="center">[[${task.duration}]]</td>
             <td class="col-start" align="center">[[${task.start}]]</td>
             <td class="col-finish" align="center">[[${task.finish}]]</td>
-            <td class="col-percentage" align="center">[[${task.percentageComplete}]]</td>
+            <td th:if="${task.isStarted}" class="col-started" align="center">Yes</td>
+            <td th:unless="${task.isStarted}" class="col-started" align="center">No</td>
             <td class="col-notes" align="center">[[${task.notes}]]</td>
           </tr>
         </th:block>

@@ -19,6 +19,8 @@ public class UserAccountPojo {
 
 	private List<Long> projects;
 
+	private List<Long> resources;
+
 	private String isActive;
 
 }

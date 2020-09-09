@@ -9,8 +9,11 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.example.demo.Domain.TaskPOJO;
+import com.example.demo.Service.FileService;
+import com.example.demo.Service.ProjectService;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,13 +25,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.example.demo.Domain.TaskPOJO;
-import com.example.demo.Service.FileService;
-import com.example.demo.Service.ProjectService;
 
 @Transactional
 @RequestMapping("/project")
@@ -100,10 +98,24 @@ public class ProjectController {
 
 	}
 
+	@PostMapping("/multiple-resources")
+	public Set<Map<String, String>> getMultipleResources(@RequestBody List<Long> projectIds) {
+
+		return projectService.getAllResources(projectIds);
+
+	}
+
 	@GetMapping("/tasks/{id}")
 	public List<TaskPOJO> getTasks(@PathVariable("id") Long uid) throws ParseException {
 
-		return projectService.getAllTasks(uid);
+		return projectService.getAllTasks(uid, "Weeks", 2);
+
+	}
+
+	@PostMapping("/tasks/filter/{projectId}")
+	public List<TaskPOJO> getTasksWithFilter(@PathVariable("projectId") Long uid, @RequestParam("filterType") String filterType, @RequestParam("timeValue") int timeValue) throws ParseException {
+
+		return projectService.getAllTasks(uid, filterType, timeValue);
 
 	}
 

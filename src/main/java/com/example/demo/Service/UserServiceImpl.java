@@ -5,20 +5,21 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.example.demo.Domain.UserAccountPojo;
+import com.example.demo.Entity.PResource;
 import com.example.demo.Entity.Project;
 import com.example.demo.Entity.User;
 import com.example.demo.Entity.UserAcount;
 import com.example.demo.Repository.ProjectRepository;
+import com.example.demo.Repository.ResourceRepository;
 import com.example.demo.Repository.UserAccountRepository;
 import com.example.demo.Repository.UserRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -33,6 +34,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	ProjectRepository projectRepo;
+	
+	@Autowired
+	ResourceRepository resourceRepo;
 
 	@Autowired
 	UserRepository userRepo;
@@ -50,25 +54,25 @@ public class UserServiceImpl implements UserService {
 
 	}
 
-	public void createUsersAccount(String username, String newUsername, String password, String role,
-			List<Long> projectIds) {
+	public void createUsersAccount(String username, UserAccountPojo userAccountPojo) {
 		try {
 
 			User u = users.findByUsername(username).orElseGet(null);
 
 			UserAcount uA = new UserAcount();
 
-			Set<Project> projectList = new HashSet<Project>();
 
-			for (Long id : projectIds) {
-				projectList.add(projectRepo.findById(id).get());
+			Set<PResource> resourceList = new HashSet<PResource>();
+
+			for (Long id : userAccountPojo.getResources()) {
+				resourceList.add(resourceRepo.findById(id).get());
 			}
 
-			this.users.save(User.builder().username(newUsername).password(this.passwordEncoder.encode(password))
-					.roles(Arrays.asList(role)).build());
-			User newUser = users.findByUsername(newUsername).get();
-			newUser.setProjects(projectList);
+			this.users.save(User.builder().username(userAccountPojo.getUsername()).password(this.passwordEncoder.encode(userAccountPojo.getPassword()))
+					.roles(Arrays.asList(userAccountPojo.getRole())).build());
+			User newUser = users.findByUsername(userAccountPojo.getUsername()).get();
 			uA.setUser(newUser);
+			uA.setResources(resourceList);
 			uA.setOwner(u);
 
 			Set<UserAcount> acountSet = new HashSet<UserAcount>();

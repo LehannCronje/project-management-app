@@ -11,7 +11,7 @@ import com.example.demo.Entity.Report;
 
 public interface ReportService {
 
-    public void taskListReport(List<Long> uidList) throws Exception;
+    public void taskListReport(List<Long> uidList, String calendarType, int value) throws Exception;
 
     public void updateReport(UpdateTask updateTask) throws Exception;
 

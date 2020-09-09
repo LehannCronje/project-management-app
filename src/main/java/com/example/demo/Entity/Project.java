@@ -14,6 +14,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderBy;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -47,6 +48,7 @@ public class Project {
     private Set<User> users = new HashSet<User>();
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
+    @OrderBy("id ASC")
     private Set<PResource> resources = new HashSet<PResource>();
 
     @OneToOne(fetch = FetchType.LAZY)

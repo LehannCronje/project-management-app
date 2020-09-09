@@ -3,14 +3,22 @@ package com.example.demo.Controller;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.http.ResponseEntity.ok;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.example.demo.Domain.UpdateProjectsReqDTO;
 import com.example.demo.Domain.UserAccountPojo;
+import com.example.demo.Entity.PResource;
+import com.example.demo.Entity.User;
+import com.example.demo.Entity.UserAcount;
+import com.example.demo.Repository.UserRepository;
+import com.example.demo.Service.MobileService;
 import com.example.demo.Service.ProjectService;
+import com.example.demo.Service.ResourceService;
 import com.example.demo.Service.UserService;
+import com.example.demo.dto.UpdateUserResourcesReqDto;
 import com.example.demo.dto.UserReqDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +26,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/user")
@@ -34,6 +40,15 @@ public class UserController {
 	@Autowired
 	ProjectService projectService;
 
+	@Autowired
+	UserRepository userRepo;
+
+	@Autowired
+	MobileService mobileService;
+
+	@Autowired
+	ResourceService resourceService;
+
 	@GetMapping("/create")
 	public void createUsers() {
 
@@ -44,8 +59,7 @@ public class UserController {
 	public void createUsersAccount(@AuthenticationPrincipal UserDetails userDetails,
 			@RequestBody UserAccountPojo userAccountPojo) {
 
-		userService.createUsersAccount(userDetails.getUsername(), userAccountPojo.getUsername(),
-				userAccountPojo.getPassword(), userAccountPojo.getRole(), userAccountPojo.getProjects());
+		userService.createUsersAccount(userDetails.getUsername(), userAccountPojo);
 	}
 
 	@GetMapping("/accounts")
@@ -112,4 +126,44 @@ public class UserController {
 		return ok("ok");
 	}
 
+	@PostMapping("/updateResources")
+	public ResponseEntity addResources(@RequestBody UpdateUserResourcesReqDto updateUserResourcesReqDto){
+		resourceService.addUserAccountResources(updateUserResourcesReqDto.getAddedResources(), updateUserResourcesReqDto.getUserId());
+		resourceService.removeUserAccountResources(updateUserResourcesReqDto.getRemovedResources(), updateUserResourcesReqDto.getUserId());
+		return ok("ok");
+	}
+
+	@GetMapping("/project/resources/{id}")
+	public List<Map<String,String>> getResources(@PathVariable("id") Long uid, HttpServletResponse response,
+												 @AuthenticationPrincipal UserDetails userDetails) {
+
+		User user = userRepo.findByUsername(userDetails.getUsername()).get();
+		List<Map<String,String>> resourceList = new ArrayList<Map<String,String>>();
+		Map<String,String> resourceDetailsMap = new HashMap<String,String>();
+
+		for(PResource resource : mobileService.getAccountResources(userDetails.getUsername(), uid)){
+			resourceDetailsMap = new HashMap<String,String>();
+			resourceDetailsMap.put("id", "" + resource.getId());
+			resourceDetailsMap.put("name", resource.getName());
+			resourceList.add(resourceDetailsMap);
+		}
+		return resourceList;
+
+	}
+
+	@GetMapping("account/project/resources/{uid}")
+	public List<Map<String,String>> getResourcesByUserId(@PathVariable("uid") Long userId){
+		User user = userRepo.findById(userId).get();
+		List<Map<String,String>> resourceList = new ArrayList<Map<String,String>>();
+		Map<String,String> resourceDetailsMap = new HashMap<String,String>();
+		for(PResource resource : user.getUserAcount().getResources()){
+			resourceDetailsMap = new HashMap<String,String>();
+			resourceDetailsMap.put("id", "" + resource.getId());
+			resourceDetailsMap.put("name", resource.getName());
+			resourceDetailsMap.put("projectName", resource.getProject().getName());
+			resourceList.add(resourceDetailsMap);
+		}
+		return resourceList;
+
+	}
 }

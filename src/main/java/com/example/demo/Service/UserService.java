@@ -8,8 +8,7 @@ public interface UserService {
 
 	public void createUsers();
 
-	public void createUsersAccount(String username, String newUsername, String password, String role,
-			List<Long> projectIds);
+	public void createUsersAccount(String username, UserAccountPojo userAccountPojo);
 
 	public List<UserAccountPojo> getUserAccounts(String username);
 

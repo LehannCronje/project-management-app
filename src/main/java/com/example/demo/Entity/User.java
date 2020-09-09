@@ -58,6 +58,8 @@ public class User implements UserDetails {
 	@NotEmpty
 	private String password;
 
+	private String dateSetting;
+
 	@Builder.Default
 	private String isActive = "ACTIVE";
 

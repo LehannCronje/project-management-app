@@ -10,18 +10,24 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Where;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @Entity
 @SQLDelete(sql = "UPDATE rtask SET delete_date = CURRENT_TIMESTAMP WHERE id = ?")
 @Where(clause = "delete_date IS NULL")
 @Setter
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class RTask {
 
     @Id
@@ -54,8 +60,28 @@ public class RTask {
 
     private Date deleteDate;
 
+    private boolean isStarted;
+
+    private Boolean isUpdated;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "presource_id")
     private PResource resource;
+
+    public void setIsUpdated(boolean val){
+        this.isUpdated = val;
+    }
+
+    public boolean getIsUpdated(){
+        return this.isUpdated;
+    }
+
+    public void setIsStarted(boolean val){
+        this.isStarted = val;
+    }
+
+    public boolean getIsStarted(){
+        return this.isStarted;
+    }
 
 }

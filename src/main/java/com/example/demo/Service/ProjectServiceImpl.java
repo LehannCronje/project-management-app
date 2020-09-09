@@ -4,12 +4,14 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.example.demo.Domain.TaskPOJO;
 import com.example.demo.Entity.MpxFile;
@@ -24,10 +26,15 @@ import com.example.demo.Repository.ResourceRepository;
 import com.example.demo.Repository.TaskRepository;
 import com.example.demo.Repository.TxnUpdateReportRepository;
 import com.example.demo.Repository.UserRepository;
+import com.example.demo.dto.TaskResDTO;
+import com.example.demo.dto.UpdatedTaskResDTO;
 
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,8 +89,12 @@ public class ProjectServiceImpl implements ProjectService {
 		Set<PResource> ress = new HashSet<PResource>();
 		Set<Project> projects = new HashSet<Project>();
 		Set<RTask> tasks = new HashSet<RTask>();
-
-		String pattern = "dd MMMM yyyy";
+		String pattern = "";
+		if(u.getDateSetting() != null && u.getDateSetting().equals("usa")){
+			pattern = "MM-dd-yyyy";
+		}else{
+			pattern = "dd-MM-yyyy";
+		}
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
 		if (p.getMpxFile() == null) {
 			p.setMpxFile(f);
@@ -105,6 +116,7 @@ public class ProjectServiceImpl implements ProjectService {
 			p.setName(fileName.split(".mpp", 0)[0]);
 
 			for (Resource resource : project.getResources()) {
+				System.out.println(resource.getUniqueID());
 				r = new PResource();
 				if (resource.getType().equals(ResourceType.WORK)) {
 
@@ -118,24 +130,28 @@ public class ProjectServiceImpl implements ProjectService {
 						p.setResources(ress);
 					}
 					for (ResourceAssignment assignment : resource.getTaskAssignments()) {
-						t = new RTask();
-						t.setResource(r);
-						t.setName(assignment.getTask().getName());
-						t.setParentTask(Long.valueOf(assignment.getTask().getParentTask().getID()));
-						t.setParentTaskName(assignment.getTask().getParentTask().getName());
-						t.setParentWBS(assignment.getTask().getParentTask().getWBS());
-						t.setWBS(assignment.getTask().getWBS());
-						t.setUid(Long.valueOf(assignment.getTask().getID()));
-						t.setPercentageComplete("" + assignment.getTask().getPercentageComplete().intValue() + " %");
-						t.setDurationComplete("" + assignment.getTask().getDuration());
-						t.setStart(simpleDateFormat.format(assignment.getTask().getStart()));
-						t.setFinish(simpleDateFormat.format(assignment.getTask().getFinish()));
-						t.setRemainingDuration("" + assignment.getTask().getRemainingDuration());
-						t.setNotes(assignment.getTask().getNotes());
-						if (r.getTasks() == null) {
-							r.setTasks(tasks);
+						if(assignment.getTask().getActive()){
+							t = new RTask();
+							t.setResource(r);
+							t.setName(assignment.getTask().getName());
+							t.setParentTask(Long.valueOf(assignment.getTask().getParentTask().getID()));
+							t.setParentTaskName(assignment.getTask().getParentTask().getName());
+							t.setParentWBS(assignment.getTask().getParentTask().getWBS());
+							t.setWBS(assignment.getTask().getWBS());
+							t.setUid(Long.valueOf(assignment.getTask().getID()));
+							t.setPercentageComplete("" + assignment.getTask().getPercentageComplete().intValue() + " %");
+							t.setDurationComplete("" + assignment.getTask().getDuration());
+							t.setStart(simpleDateFormat.format(assignment.getTask().getStart()));
+							t.setFinish(simpleDateFormat.format(assignment.getTask().getFinish()));
+							t.setRemainingDuration("" + assignment.getTask().getRemainingDuration());
+							t.setIsStarted((assignment.getTask().getActualStart()) != null);
+							t.setIsUpdated(false);
+							t.setNotes(assignment.getTask().getNotes());
+							if (r.getTasks() == null) {
+								r.setTasks(tasks);
+							}
+							r.getTasks().add(t);
 						}
-						r.getTasks().add(t);
 
 					}
 					p.getResources().add(r);
@@ -158,11 +174,18 @@ public class ProjectServiceImpl implements ProjectService {
 
 	public Set<Map<String, String>> getAllProjects(String username) {
 
-		String pattern = "dd MMMM yyyy";
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-
 		Set<Map<String, String>> s = new HashSet<Map<String, String>>();
 		User u = userRepo.findByUsername(username).get();
+
+		String pattern = "";
+
+		if(u.getDateSetting() != null && u.getDateSetting().equals("usa")){
+			pattern = "MM-dd-yyyy";
+		}else{
+			pattern = "dd-MM-yyyy";
+		}
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+
 
 		for (Project project : u.getProjects()) {
 			Map<String, String> m = new HashMap<String, String>();
@@ -199,18 +222,15 @@ public class ProjectServiceImpl implements ProjectService {
 	public Set<Map<String, String>> getAllResources(Long uid) {
 
 		Set<Map<String, String>> s = new HashSet<Map<String, String>>();
+		Project project = projectRepo.findById(uid).get();
+		Set<PResource> resourceSet = project.getResources();
 
-		for (PResource resource : projectRepo.findById(uid).get().getResources()) {
+		for (PResource resource : resourceSet) {
 			Map<String, String> m = new HashMap<String, String>();
 			m.put("id", "" + resource.getId());
 			m.put("name", resource.getName());
 			try {
-				if (this.getAllTasks(resource.getId()).isEmpty()) {
-
-				} else {
-					s.add(m);
-				}
-
+				s.add(m);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -219,34 +239,84 @@ public class ProjectServiceImpl implements ProjectService {
 		return s;
 	}
 
+	public Set<Map<String, String>> getAllResources(List<Long> projectIds) {
+
+		Set<Map<String, String>> s = new HashSet<Map<String, String>>();
+
+		for (Long uid : projectIds) {
+			for (PResource resource : projectRepo.findById(uid).get().getResources()) {
+				Map<String, String> m = new HashMap<String, String>();
+				m.put("id", "" + resource.getId());
+				m.put("name", resource.getName());
+				try {
+					s.add(m);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return s;
+	}
+
 	@Override
-	public List<TaskPOJO> getAllTasks(Long uid) throws ParseException {
+	public List<TaskPOJO> getAllTasks(Long uid, String calendarType, int value) throws ParseException {
 
 		List<TaskPOJO> s = new ArrayList<TaskPOJO>();
 		TaskPOJO tp = new TaskPOJO();
-		List<Map<String, String>> ss = new ArrayList<Map<String, String>>();
-		Map<String, String> m = new HashMap<String, String>();
+		TaskResDTO taskResDTO = new TaskResDTO();
+		UpdatedTaskResDTO updatedTaskResDTO = new UpdatedTaskResDTO();
+		TxnUpdateReport txnUpdateReport = new TxnUpdateReport();
+		List<TaskResDTO> ss = new ArrayList<TaskResDTO>();
 
-		for (RTask task : resourceRepo.findById(uid).get().getTasks()) {
-			m = new HashMap<String, String>();
-			ss = new ArrayList<Map<String, String>>();
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		User user = userRepo.findByUsername(auth.getName()).get();
+		String pattern = "";
+		if(user.getDateSetting() != null && user.getDateSetting().equals("usa")){
+			pattern = "MM-dd-yyyy";
+		}else{
+			pattern = "dd-MM-yyyy";
+		}
 
-			if (testDate(task.getStart()) || testDate(task.getFinish())) {
+		for (RTask task : resourceRepo.findById(uid).get().getTasks()){
+
+			taskResDTO = new TaskResDTO();
+			updatedTaskResDTO = new UpdatedTaskResDTO();
+			ss = new ArrayList<TaskResDTO>();
+
+			if (!testDate(task.getStart(), calendarType, value, pattern) && !task.getPercentageComplete().equals("100 %")) {
 				boolean flag = false;
 				for (int i = 0; i < s.size(); i++) {
 					if (s.get(i).getId().equals(task.getParentTask())) {
 
 						tp = s.get(i);
 						ss = tp.getTasks();
-						m.put("name", task.getName());
-						m.put("id", "" + task.getUid());
-						m.put("duration", task.getDurationComplete());
-						m.put("percentageComplete", task.getPercentageComplete());
-						m.put("remainingDuration", task.getRemainingDuration());
-						m.put("start", task.getStart());
-						m.put("finish", task.getFinish());
-						m.put("notes", task.getNotes());
-						ss.add(m);
+						taskResDTO.setName(task.getName());
+						taskResDTO.setId("" + task.getUid());
+						taskResDTO.setDuration(task.getDurationComplete());
+						taskResDTO.setPercentageComplete(task.getPercentageComplete());
+						taskResDTO.setRemainingDuration(task.getRemainingDuration());
+						taskResDTO.setStart(task.getStart());
+						taskResDTO.setFinish(task.getFinish());
+						taskResDTO.setNotes(task.getNotes());
+						taskResDTO.setIsUpdated("" + task.getIsUpdated());
+						taskResDTO.setIsStarted("" + task.getIsStarted());
+						txnUpdateReport = txnReportUpdateRepo.findByTaskID(task.getUid()).orElse(null);
+						if(txnUpdateReport != null){
+							updatedTaskResDTO.setId(""+txnUpdateReport.getId());
+							updatedTaskResDTO.setStarted(""+txnUpdateReport.isStarted());
+							updatedTaskResDTO.setStart(txnUpdateReport.getStart());
+							updatedTaskResDTO.setFinished(""+txnUpdateReport.isFinished());
+							updatedTaskResDTO.setFinish(txnUpdateReport.getFinish());
+							updatedTaskResDTO.setChangeRemainingDuration(""+txnUpdateReport.isChangeRemainingDuration());
+							if(txnUpdateReport.isChangeRemainingDuration()){
+								updatedTaskResDTO.setRemainingDuration(txnUpdateReport.getRemainingDuration());
+							}
+							updatedTaskResDTO.setRequireMoreWork("" + txnUpdateReport.isRequireMoreWork());
+							updatedTaskResDTO.setNotes(txnUpdateReport.getNotes());
+						}
+						taskResDTO.setUpdatedTaskResDTO(updatedTaskResDTO);
+						ss.add(taskResDTO);
 						s.get(i).setTasks(ss);
 						flag = true;
 
@@ -258,16 +328,37 @@ public class ProjectServiceImpl implements ProjectService {
 
 				if (!flag) {
 					tp = new TaskPOJO();
-					m.put("name", task.getName());
-					m.put("id", "" + task.getUid());
-					m.put("duration", task.getDurationComplete());
-					m.put("percentageComplete", task.getPercentageComplete());
-					m.put("start", task.getStart());
-					m.put("finish", task.getFinish());
-					m.put("notes", task.getNotes());
+					taskResDTO.setName(task.getName());
+					taskResDTO.setId("" + task.getUid());
+					taskResDTO.setDuration(task.getDurationComplete());
+					taskResDTO.setPercentageComplete(task.getPercentageComplete());
+					taskResDTO.setRemainingDuration(task.getRemainingDuration());
+					taskResDTO.setStart(task.getStart());
+					taskResDTO.setFinish(task.getFinish());
+					taskResDTO.setNotes(task.getNotes());
+					taskResDTO.setIsUpdated("" + task.getIsUpdated());
+					taskResDTO.setIsStarted("" + task.getIsStarted());
 					tp.setName(task.getParentTaskName());
 					tp.setId(task.getParentTask());
-					ss.add(m);
+
+					txnUpdateReport = txnReportUpdateRepo.findByTaskID(task.getUid()).orElse(null);
+						if(txnUpdateReport != null){
+							updatedTaskResDTO.setId(""+txnUpdateReport.getId());
+							updatedTaskResDTO.setStarted(""+txnUpdateReport.isStarted());
+							updatedTaskResDTO.setStart(txnUpdateReport.getStart());
+							updatedTaskResDTO.setFinished(""+txnUpdateReport.isFinished());
+							updatedTaskResDTO.setFinish(txnUpdateReport.getFinish());
+							updatedTaskResDTO.setChangeRemainingDuration(""+txnUpdateReport.isChangeRemainingDuration());
+							if(txnUpdateReport.isChangeRemainingDuration()){
+								updatedTaskResDTO.setRemainingDuration(txnUpdateReport.getRemainingDuration());
+							}
+							updatedTaskResDTO.setRequireMoreWork("" + txnUpdateReport.isRequireMoreWork());
+							updatedTaskResDTO.setNotes(txnUpdateReport.getNotes());
+						}
+						taskResDTO.setUpdatedTaskResDTO(updatedTaskResDTO);
+
+					ss.add(taskResDTO);
+
 					tp.setTasks(ss);
 					s.add(tp);
 				}
@@ -275,6 +366,8 @@ public class ProjectServiceImpl implements ProjectService {
 			}
 		}
 
+		
+		Collections.sort(s);
 		return s;
 	}
 
@@ -301,7 +394,12 @@ public class ProjectServiceImpl implements ProjectService {
 		Set<PResource> ress = new HashSet<PResource>();
 		Set<RTask> tasks = new HashSet<RTask>();
 
-		String pattern = "dd MMMM yyyy";
+		String pattern = "";
+		if(u.getDateSetting() != null && u.getDateSetting().equals("usa")){
+			pattern = "MM-dd-yyyy";
+		}else{
+			pattern = "dd-MM-yyyy";
+		}
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
 		// Long mpxFileId = p.getMpxFile().getId();
 		// p.removeMpxFile(p.getMpxFile());
@@ -339,24 +437,28 @@ public class ProjectServiceImpl implements ProjectService {
 
 					}
 					for (ResourceAssignment assignment : resource.getTaskAssignments()) {
-						t = new RTask();
-						t.setResource(r);
-						t.setName(assignment.getTask().getName());
-						t.setParentTask(Long.valueOf(assignment.getTask().getParentTask().getUniqueID()));
-						t.setParentTaskName(assignment.getTask().getParentTask().getName());
-						t.setParentWBS(assignment.getTask().getParentTask().getWBS());
-						t.setWBS(assignment.getTask().getWBS());
-						t.setUid(Long.valueOf(assignment.getTask().getID()));
-						t.setPercentageComplete("" + assignment.getTask().getPercentageComplete().intValue() + " %");
-						t.setDurationComplete("" + assignment.getTask().getDuration());
-						t.setStart(simpleDateFormat.format(assignment.getTask().getStart()));
-						t.setFinish(simpleDateFormat.format(assignment.getTask().getFinish()));
-						t.setRemainingDuration("" + assignment.getTask().getRemainingDuration());
-						t.setNotes(assignment.getTask().getNotes());
-						if (r.getTasks() == null) {
-							r.setTasks(tasks);
+						if(assignment.getTask().getActive()){
+							t = new RTask();
+							t.setResource(r);
+							t.setName(assignment.getTask().getName());
+							t.setParentTask(Long.valueOf(assignment.getTask().getParentTask().getID()));
+							t.setParentTaskName(assignment.getTask().getParentTask().getName());
+							t.setParentWBS(assignment.getTask().getParentTask().getWBS());
+							t.setWBS(assignment.getTask().getWBS());
+							t.setUid(Long.valueOf(assignment.getTask().getID()));
+							t.setPercentageComplete("" + assignment.getTask().getPercentageComplete().intValue() + " %");
+							t.setDurationComplete("" + assignment.getTask().getDuration());
+							t.setStart(simpleDateFormat.format(assignment.getTask().getStart()));
+							t.setFinish(simpleDateFormat.format(assignment.getTask().getFinish()));
+							t.setRemainingDuration("" + assignment.getTask().getRemainingDuration());
+							t.setIsStarted((assignment.getTask().getActualStart()) != null);
+							t.setIsUpdated(false);
+							t.setNotes(assignment.getTask().getNotes());
+							if (r.getTasks() == null) {
+								r.setTasks(tasks);
+							}
+							r.getTasks().add(t);
 						}
-						r.getTasks().add(t);
 					}
 					p.getResources().add(r);
 				}
@@ -390,11 +492,13 @@ public class ProjectServiceImpl implements ProjectService {
 		}
 	}
 
-	public boolean testDate(String stringDate) throws ParseException {
-		Date date = new SimpleDateFormat("dd MMMM yyyy").parse(stringDate);
+	public boolean testDate(String stringDate, String calendarType, int value, String pattern) throws ParseException {
+		
+		
+		Date date = new SimpleDateFormat(pattern).parse(stringDate);
 		Date currentDate = new Date();
-		Date twoWeeks = getDateTwoWeeks(currentDate);
-		if (date.after(currentDate) && date.before(twoWeeks)) {
+		Date twoWeeks = getDateTwoWeeks(currentDate, calendarType, value);
+		if (date.after(twoWeeks)) {
 			return true;
 		} else {
 			return false;
@@ -404,7 +508,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 	public boolean testStart(String stringDate) throws ParseException {
 		// DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Date date = new SimpleDateFormat("dd MMMM yyyy").parse(stringDate);
+		Date date = new SimpleDateFormat("dd-MM-yyyy").parse(stringDate);
 		Date currentDate = new Date();
 
 		if (date.before(currentDate)) {
@@ -415,10 +519,18 @@ public class ProjectServiceImpl implements ProjectService {
 
 	}
 
-	public Date getDateTwoWeeks(Date date) {
+	public Date getDateTwoWeeks(Date date, String calendarType, int value) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
-		calendar.add(Calendar.DATE, 14); // 2 weeks
+		if(calendarType.equals("Hours")){
+			calendar.add(Calendar.HOUR_OF_DAY, value); 
+		}
+		if(calendarType.equals("Days")){
+			calendar.add(Calendar.DATE, value);
+		}
+		if(calendarType.equals("Weeks")){
+			calendar.add(Calendar.WEEK_OF_YEAR, value);
+		}
 		return calendar.getTime();
 	}
 

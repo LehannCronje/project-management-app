@@ -2,7 +2,6 @@ package com.example.demo.Entity;
 
 import java.util.Date;
 import java.util.HashSet;
-
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -11,10 +10,11 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderBy;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -49,6 +49,9 @@ public class PResource {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "report_id", referencedColumnName = "id")
     private Report report;
+
+    @ManyToMany(mappedBy = "resources")
+    private Set<UserAcount> userAcounts = new HashSet<UserAcount>();
     
     public void removeTask(RTask task) {
     	tasks.remove(task);

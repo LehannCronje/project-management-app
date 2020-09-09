@@ -21,7 +21,9 @@ public interface ProjectService {
 
     public Set<Map<String, String>> getAllResources(Long uid);
 
-    public List<TaskPOJO> getAllTasks(Long uid) throws ParseException;
+    public Set<Map<String, String>> getAllResources(List<Long> projects);
+
+    public List<TaskPOJO> getAllTasks(Long uid, String calendarType, int value) throws ParseException;
 
     public void updateProject(String fileName, Long puid, String username);
 

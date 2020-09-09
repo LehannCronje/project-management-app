@@ -1,18 +1,24 @@
 package com.example.demo.Domain;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import com.example.demo.dto.TaskResDTO;
 
 import lombok.Data;
 
 @Data
-public class TaskPOJO {
+public class TaskPOJO implements Comparable<TaskPOJO>{
 
     private Long id;
 
     private String name;
 
-    private List<Map<String, String>> tasks;
+    private List<TaskResDTO> tasks;
 
+    @Override
+    public int compareTo(TaskPOJO o) {
+        return this.getId().compareTo(o.getId());
+    }
+
+    
 }

@@ -11,10 +11,8 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -23,8 +21,11 @@ import com.example.demo.Domain.StefanDomain;
 import com.example.demo.Domain.StefanResDTO;
 import com.example.demo.Domain.TaskPOJO;
 import com.example.demo.Domain.UpdateTask;
+import com.example.demo.Entity.PResource;
+import com.example.demo.Entity.Project;
 import com.example.demo.Entity.User;
 import com.example.demo.Repository.UserRepository;
+import com.example.demo.Service.MobileService;
 import com.example.demo.Service.ProjectService;
 import com.example.demo.Service.ReportService;
 
@@ -54,35 +55,56 @@ public class MobileController {
 	ReportService reportService;
 
 	@Autowired
+	MobileService mobileService;
+
+	@Autowired
 	UserRepository userRepo;
 
 	@GetMapping("/project/all")
-	public Set all(@AuthenticationPrincipal UserDetails userDetails, HttpServletResponse response) {
+	public List<Map<String,String>> all(@AuthenticationPrincipal UserDetails userDetails, HttpServletResponse response) {
 		User user = userRepo.findByUsername(userDetails.getUsername()).get();
 		user.setIsUpdated(false);
 		userRepo.save(user);
-		Set s = projectService.getAllProjects(userDetails.getUsername());
 		if (!user.isEnabled()) {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-			return s;
+			return new ArrayList<Map<String,String>>();
 		}
-		return s;
+		List<Map<String,String>> projectList = new ArrayList<Map<String,String>>();
+		Map<String,String> projectDetailsMap = new HashMap<String,String>();
+		for(Project project : mobileService.getAccountProjects(userDetails.getUsername())){
+			projectDetailsMap = new HashMap<String,String>();
+			projectDetailsMap.put("id", "" + project.getId());
+			projectDetailsMap.put("name", "" + project.getName());
+			projectDetailsMap.put("statusDate", "" + project.getStatusDate());
+			projectList.add(projectDetailsMap);
+		}
+		return projectList;
 	}
 
 	@GetMapping("/project/resources/{id}")
-	public Set<Map<String, String>> getResources(@PathVariable("id") Long uid, HttpServletResponse response,
+	public List<Map<String,String>> getResources(@PathVariable("id") Long uid, HttpServletResponse response,
 			@AuthenticationPrincipal UserDetails userDetails) {
 
 		User user = userRepo.findByUsername(userDetails.getUsername()).get();
 		if (!user.isEnabled()) {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-			return new HashSet<Map<String, String>>();
+			return new ArrayList<Map<String,String>>();
 		}
 		if (projectService.isProjectLocked(uid) || user.isUpdated()) {
 			response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-			return new HashSet<Map<String, String>>();
+			return new ArrayList<Map<String,String>>();
 		} else {
-			return projectService.getAllResources(uid);
+			
+			List<Map<String,String>> resourceList = new ArrayList<Map<String,String>>();
+			Map<String,String> resourceDetailsMap = new HashMap<String,String>();
+
+			for(PResource resource : mobileService.getAccountResources(userDetails.getUsername(), uid)){
+				resourceDetailsMap = new HashMap<String,String>();
+				resourceDetailsMap.put("id", "" + resource.getId());
+				resourceDetailsMap.put("name", resource.getName());
+				resourceList.add(resourceDetailsMap);
+			}
+			return resourceList;
 		}
 
 	}
@@ -100,7 +122,7 @@ public class MobileController {
 			response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
 			return new ArrayList<TaskPOJO>();
 		} else {
-			return projectService.getAllTasks(uid);
+			return projectService.getAllTasks(uid, "Weeks", 2);
 		}
 	}
 

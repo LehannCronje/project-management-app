@@ -29,9 +29,9 @@ public class ReportController {
     ReportService reportService;
 
     @PostMapping(value = "/taskList")
-    public void taskListReport(HttpServletResponse response, @RequestParam("data") List<Long> data) throws Exception {
-
-        reportService.taskListReport(data);
+    public void taskListReport(HttpServletResponse response, @RequestParam("data") List<Long> data, @RequestParam("filterType") String filterType, @RequestParam("timeValue") String timeValue) throws Exception {
+        System.out.println(filterType + timeValue);
+        reportService.taskListReport(data, filterType, Integer.parseInt(timeValue));
         reportService.downloadPdf(response, data);
     }
 
