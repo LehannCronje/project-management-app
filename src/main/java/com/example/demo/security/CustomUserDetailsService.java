@@ -12,7 +12,7 @@ public class CustomUserDetailsService implements UserDetailsService{
 
 	private UserRepository users;
 
-	 public CustomUserDetailsService(UserRepository users) {
+	public CustomUserDetailsService(UserRepository users) {
 	        this.users = users;
 	    }
 	

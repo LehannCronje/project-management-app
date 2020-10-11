@@ -19,7 +19,7 @@ public interface ProjectService {
 
     public Set<Map<String, String>> getAllProjects(String username);
 
-    public Set<Map<String, String>> getAllResources(Long uid);
+    public Set<Map<String, String>> getAllResources(Long uid) throws ParseException;
 
     public Set<Map<String, String>> getAllResources(List<Long> projects);
 

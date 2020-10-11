@@ -7,5 +7,5 @@ public class UserReqDTO {
 
     private String username;
 
-    private String password;
+    private String newPassword;
 }

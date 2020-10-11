@@ -92,7 +92,7 @@ public class ProjectController {
 	}
 
 	@GetMapping("/resources/{id}")
-	public Set<Map<String, String>> getResources(@PathVariable("id") Long uid) {
+	public Set<Map<String, String>> getResources(@PathVariable("id") Long uid) throws ParseException {
 
 		return projectService.getAllResources(uid);
 

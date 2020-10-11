@@ -94,7 +94,7 @@ public class UserController {
 	@PostMapping("/changepassword")
 	public ResponseEntity changePassword(@RequestBody UserReqDTO userReqDTO) {
 
-		userService.changeUserPassword(userReqDTO.getUsername(), userReqDTO.getPassword());
+		userService.changeUserPassword(userReqDTO.getUsername(), userReqDTO.getNewPassword());
 
 		return ok("Success");
 	}
@@ -165,5 +165,10 @@ public class UserController {
 		}
 		return resourceList;
 
+	}
+
+	@GetMapping("/create-new-user")
+	public void createNewUser(@RequestParam("username") String username, @RequestParam("password") String password, @RequestParam("role") String role){
+		userService.createNewUser(username,password,role);
 	}
 }

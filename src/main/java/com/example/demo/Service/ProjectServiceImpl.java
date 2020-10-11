@@ -219,13 +219,14 @@ public class ProjectServiceImpl implements ProjectService {
 
 	}
 
-	public Set<Map<String, String>> getAllResources(Long uid) {
+	public Set<Map<String, String>> getAllResources(Long uid) throws ParseException {
 
 		Set<Map<String, String>> s = new HashSet<Map<String, String>>();
 		Project project = projectRepo.findById(uid).get();
 		Set<PResource> resourceSet = project.getResources();
 
 		for (PResource resource : resourceSet) {
+
 			Map<String, String> m = new HashMap<String, String>();
 			m.put("id", "" + resource.getId());
 			m.put("name", resource.getName());
@@ -234,6 +235,7 @@ public class ProjectServiceImpl implements ProjectService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+
 		}
 
 		return s;

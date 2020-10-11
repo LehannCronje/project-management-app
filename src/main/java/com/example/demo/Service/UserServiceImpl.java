@@ -54,6 +54,25 @@ public class UserServiceImpl implements UserService {
 
 	}
 
+	@Override
+	public void createNewUser(String username, String password, String role) {
+		try {
+			List roles = new ArrayList();
+			if(role.equals("ROLE_ADMIN")){
+				roles.add("ROLE_ADMIN");
+				roles.add("ROLE_USER");
+				this.users.save(User.builder().username(username).password(this.passwordEncoder.encode(password))
+						.roles(roles).build());
+			}else{
+				this.users.save(User.builder().username(username).password(this.passwordEncoder.encode(password))
+						.roles(Arrays.asList(role)).build());
+			}
+
+		} catch (Exception e) {
+			System.out.println("Duplicate entries");
+		}
+	}
+
 	public void createUsersAccount(String username, UserAccountPojo userAccountPojo) {
 		try {
 

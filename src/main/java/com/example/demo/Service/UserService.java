@@ -8,6 +8,8 @@ public interface UserService {
 
 	public void createUsers();
 
+	public void createNewUser(String username, String password, String role);
+
 	public void createUsersAccount(String username, UserAccountPojo userAccountPojo);
 
 	public List<UserAccountPojo> getUserAccounts(String username);

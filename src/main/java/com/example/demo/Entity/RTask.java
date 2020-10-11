@@ -62,7 +62,7 @@ public class RTask {
 
     private boolean isStarted;
 
-    private Boolean isUpdated;
+    private boolean isUpdated;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "presource_id")
@@ -83,5 +83,6 @@ public class RTask {
     public boolean getIsStarted(){
         return this.isStarted;
     }
+
 
 }

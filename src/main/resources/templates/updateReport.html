@@ -37,22 +37,23 @@
         </tr>
       </thead>
       <th:block th:each="task: ${data.updateReportList}">
-      <tr>
-        <td class="col-finish" align="center">[[${task.taskID}]]</td>
-        <td class="col-finish" align="center">[[${task.taskName}]]</td>
-        <td th:if="${task.started}" class="col-finish" align="center">Yes</td>
-        <td th:unless="${task.started}" class="col-finish" align="center">No</td>
-        <td class="col-finish" align="center">[[${task.start}]]</td>
-        <td class="col-finish" align="center">[[${task.finish}]]</td>
-        <td th:if="${task.finished}" class="col-finish" align="center">Yes</td>
-        <td th:unless="${task.finished}" class="col-finish" align="center">No</td>
-        <td th:if="${task.requireMoreWork}" class="col-finish" align="center">Yes</td>
-        <td th:unless="${task.requireMoreWork}" class="col-finish" align="center">No</td>
-        <td th:if="${task.started}" class="col-finish" align="center">Yes</td>
-        <td th:unless="${task.started}" class="col-finish" align="center">No</td>
-        <td class="col-finish" align="center">[[${task.remainingDuration}]]</td>
-        <td class="col-finish" align="center">[[${task.notes}]]</td>
-      </tr>
+        <tr>
+          <td class="col-finish" align="center">[[${task.taskID}]]</td>
+          <td class="col-finish" align="center">[[${task.taskName}]]</td>
+          <td th:if="${task.started}" class="col-finish" align="center">Yes</td>
+          <td th:unless="${task.started}" class="col-finish" align="center">No</td>
+          <td class="col-finish" align="center">[[${task.start}]]</td>
+          <td class="col-finish" align="center">[[${task.finish}]]</td>
+          <td th:if="${task.finished}" class="col-finish" align="center">Yes</td>
+          <td th:unless="${task.finished}" class="col-finish" align="center">No</td>
+          <td th:if="${task.requireMoreWork}" class="col-finish" align="center">Yes</td>
+          <td th:unless="${task.requireMoreWork}" class="col-finish" align="center">No</td>
+          <td th:if="${task.started}" class="col-finish" align="center">Yes</td>
+          <td th:unless="${task.started}" class="col-finish" align="center">No</td>
+          <td class="col-finish" align="center">[[${task.remainingDuration}]]</td>
+          <td class="col-finish" align="center">[[${task.notes}]]</td>
+        </tr>
+      </th:block>
     </table>
   </body>
 </html>

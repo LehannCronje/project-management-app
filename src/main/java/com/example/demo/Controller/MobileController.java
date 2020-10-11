@@ -129,7 +129,7 @@ public class MobileController {
 	@PostMapping("/report/taskUpdate")
 	public void mobileUpdate(@RequestBody UpdateTask data, HttpServletResponse response, HttpServletRequest request,
 			@AuthenticationPrincipal UserDetails userDetails) throws Exception {
-
+		System.out.println(userDetails.getUsername());
 		User user = userRepo.findByUsername(userDetails.getUsername()).get();
 		if (!user.isEnabled()) {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
