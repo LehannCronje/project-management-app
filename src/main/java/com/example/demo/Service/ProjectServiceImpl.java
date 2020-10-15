@@ -29,6 +29,7 @@ import com.example.demo.Repository.UserRepository;
 import com.example.demo.dto.TaskResDTO;
 import com.example.demo.dto.UpdatedTaskResDTO;
 
+import net.sf.mpxj.*;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -38,10 +39,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import net.sf.mpxj.ProjectFile;
-import net.sf.mpxj.Resource;
-import net.sf.mpxj.ResourceAssignment;
-import net.sf.mpxj.ResourceType;
 import net.sf.mpxj.reader.ProjectReader;
 import net.sf.mpxj.reader.UniversalProjectReader;
 
@@ -115,19 +112,51 @@ public class ProjectServiceImpl implements ProjectService {
 
 			p.setName(fileName.split(".mpp", 0)[0]);
 
+
+
 			for (Resource resource : project.getResources()) {
-				System.out.println(resource.getUniqueID());
 				r = new PResource();
 				if (resource.getType().equals(ResourceType.WORK)) {
 
 					r.setProject(p);
 					if (resource.getName() == null) {
-						r.setName("No Assigned Name");
+						r.setName("No Assigned Resource");
 					} else {
 						r.setName(resource.getName());
 					}
 					if (p.getResources() == null) {
 						p.setResources(ress);
+					}
+					if(r.getName().equals("No Assigned Resource")){
+						for(Task task : project.getTasks()){
+							for(ResourceAssignment resourceAssignment : task.getResourceAssignments()){
+								if(resourceAssignment.getResource() == null){
+									if(task.getActive()){
+										t = new RTask();
+										t.setResource(r);
+										t.setName(task.getName());
+										t.setParentTask(Long.valueOf(task.getParentTask().getID()));
+										t.setParentTaskName(task.getParentTask().getName());
+										t.setParentWBS(task.getParentTask().getWBS());
+										t.setWBS(task.getWBS());
+										t.setUid(Long.valueOf(task.getID()));
+										t.setPercentageComplete("" + task.getPercentageComplete().intValue() + " %");
+										t.setDurationComplete("" + task.getDuration());
+										t.setStart(simpleDateFormat.format(task.getStart()));
+										t.setFinish(simpleDateFormat.format(task.getFinish()));
+										t.setRemainingDuration("" + task.getRemainingDuration());
+										t.setIsStarted((task.getActualStart()) != null);
+										t.setIsUpdated(false);
+										t.setNotes(task.getNotes());
+										if (r.getTasks() == null) {
+											r.setTasks(tasks);
+										}
+										r.getTasks().add(t);
+									}
+								}
+
+							}
+						}
 					}
 					for (ResourceAssignment assignment : resource.getTaskAssignments()) {
 						if(assignment.getTask().getActive()){
@@ -425,6 +454,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 			p.setStatusDate(statusDate);
 
+
 			for (Resource resource : project.getResources()) {
 				r = new PResource();
 				if (resource.getType().equals(ResourceType.WORK)) {
@@ -437,6 +467,37 @@ public class ProjectServiceImpl implements ProjectService {
 					}
 					if (p.getResources() == null) {
 
+					}
+					if(r.getName().equals("No Assigned Resource")){
+						for(Task task : project.getTasks()){
+							for(ResourceAssignment resourceAssignment : task.getResourceAssignments()){
+								if(resourceAssignment.getResource() == null){
+									if(task.getActive()){
+										t = new RTask();
+										t.setResource(r);
+										t.setName(task.getName());
+										t.setParentTask(Long.valueOf(task.getParentTask().getID()));
+										t.setParentTaskName(task.getParentTask().getName());
+										t.setParentWBS(task.getParentTask().getWBS());
+										t.setWBS(task.getWBS());
+										t.setUid(Long.valueOf(task.getID()));
+										t.setPercentageComplete("" + task.getPercentageComplete().intValue() + " %");
+										t.setDurationComplete("" + task.getDuration());
+										t.setStart(simpleDateFormat.format(task.getStart()));
+										t.setFinish(simpleDateFormat.format(task.getFinish()));
+										t.setRemainingDuration("" + task.getRemainingDuration());
+										t.setIsStarted((task.getActualStart()) != null);
+										t.setIsUpdated(false);
+										t.setNotes(task.getNotes());
+										if (r.getTasks() == null) {
+											r.setTasks(tasks);
+										}
+										r.getTasks().add(t);
+									}
+								}
+
+							}
+						}
 					}
 					for (ResourceAssignment assignment : resource.getTaskAssignments()) {
 						if(assignment.getTask().getActive()){
